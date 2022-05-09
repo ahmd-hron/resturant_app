@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -36,35 +37,49 @@ class _HomeTestState extends State<HomeTest> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: FutureBuilder(
-      future: Firebase.initializeApp(),
-      builder: (ctx, snapShot) =>
-          snapShot.connectionState == ConnectionState.waiting
-              ? const CircularProgressIndicator()
-              : Center(
-                  child: SizedBox(
-                    width: 200,
-                    height: 200,
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: FutureBuilder(
-                          future: FirebaseFirestore.instance
-                              .collection('users')
-                              .doc('JzhZz4PnoGWhBZY3Kg0L')
-                              .get(),
-                          builder: (ctx, snapShot) {
-                            if (snapShot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const CircularProgressIndicator();
-                            }
-                            final data = snapShot.data
-                                as DocumentSnapshot<Map<String, dynamic>>;
-                            print(data['name']);
-                            return Text(data['name']);
-                          }),
-                    ),
-                  ),
+      body: FutureBuilder(
+        future: Firebase.initializeApp(),
+        builder: (ctx, snapShot) {
+          if (snapShot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          }
+          if (snapShot.hasError) {
+            print('snapShotHasError');
+            print(snapShot.error);
+            return SizedBox();
+          }
+          print(snapShot.connectionState);
+          print(snapShot.data);
+          if (snapShot.connectionState != ConnectionState.waiting) {
+            return Center(
+              child: SizedBox(
+                width: 200,
+                height: 200,
+                child: Container(
+                  alignment: Alignment.center,
+                  child: FutureBuilder(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc('JzhZz4PnoGWhBZY3Kg0L')
+                          .get(),
+                      builder: (ctx, snapShot) {
+                        print('no problem so far');
+                        if (snapShot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        }
+                        final data = snapShot.data
+                            as DocumentSnapshot<Map<String, dynamic>>;
+                        print(data['name']);
+                        return Text(data['name']);
+                      }),
                 ),
-    ));
+              ),
+            );
+          }
+          return SizedBox();
+        },
+      ),
+    );
   }
 }
